@@ -120,15 +120,19 @@ if __name__ == "__main__":
                 LINE = 'Ack sip:' + sys.argv[3] + ' SIP/2.0\r\n\r\n'
                 print LINE
                 my_proxy.send(LINE)
+                IP = processed_data[8].split(' ')
+                IP = IP[3]
+                Puerto = processed_data[11]. split(' ')
+                Puerto = str(Puerto[3])
                 print 'RTP.....'
                 #aEjecutar es un string con lo que se ejecuta en la shell
                 #Añado la IP del cliente en el envio de audio. Quito la 127.0.0.1
-                #aEjecutar = './mp32rtp -i ' + IP + ' -p ' + Puerto + '< '
-                #aEjecutar += Lista[5]['audio']
-                #print "Vamos a ejecutar", aEjecutar
-                #os.system('chmod 755 mp32rtp')
-                #os.system(aEjecutar)
-                #data = my_proxy.recv(1024)
+                aEjecutar = './mp32rtp -i ' + IP + ' -p ' + Puerto + '< '
+                aEjecutar += Lista[5]['path']
+                print "Vamos a ejecutar", aEjecutar
+                os.system('chmod 755 mp32rtp')
+                os.system(aEjecutar)
+                print 'TERMINADO'
             my_proxy.close()
 
         else:
