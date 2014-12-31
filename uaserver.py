@@ -62,7 +62,8 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
     """
     Echo server class
     """
-
+    IP_RTP = '0000' 
+    Puerto_RTP = 0
     def handle(self):
         while 1:
             # Leyendo línea a línea lo que nos envía el proxy/User Agent
@@ -87,14 +88,12 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                 else:
                     if Metodo == 'Invite':
                         Info = line.split('\r\n\r\n')
-                        SDP = Info[1]
-                        SDP = SDP.split('\r\n')
-                        SDP1 = SDP [1]
-                        IP = SDP1.split(' ')
-                        IP = IP[3]
-                        SDP4 = SDP[4]
-                        Puerto = SDP4.split(' ')
-                        Puerto = Puerto[3]
+                        SDP = Info[1].split('\r\n')
+                        print SDP
+                        IP = SDP[1].split(' ')
+                        self.IP_RTP = IP[3]
+                        Puerto = SDP[4].split(' ')
+                        self.Puerto_RTP = Puerto[3]
                         Envio = 'SIP/2.0 100 Trying\r\n\r\n'
                         Envio += 'SIP/2.0 180 Ringing\r\n\r\n'
                         Envio += 'SIP/2.0 200 OK\r\n'
@@ -111,12 +110,12 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                     elif Metodo == 'Ack':
                         print 'RTP......'
                         #aEjecutar es un string con lo que se ejecuta en la shell
-                        #Añado la IP del cliente en el envio de audio. Quito la 127.0.0.1
-                        #aEjecutar = './mp32rtp -i ' + IP + ' -p ' + Puerto + '< '
-                        #aEjecutar += Lista[5]['audio']
-                        #print "Vamos a ejecutar", aEjecutar
-                        #os.system('chmod 755 mp32rtp')
-                        #os.system(aEjecutar)
+                        aEjecutar = './mp32rtp -i ' + self.IP_RTP + ' -p ' + str(self.Puerto_RTP) + '< '
+                        aEjecutar += Lista[5]['path']
+                        print "Vamos a ejecutar", aEjecutar
+                        os.system('chmod 755 mp32rtp')
+                        os.system(aEjecutar)
+                        print 'TERMINADO'
                     elif Metodo == 'Bye':
                         Envio = 'SIP/2.0 200 OK\r\n\r\n'
                         print Envio
