@@ -116,7 +116,6 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                         Direc = Direc[1]
                         if Direc in Usuarios:
                             #SACARLO DEL BUFFER Y ENVIAR AL OTRO UA
-                            print '-------------Reenvio---------------'
                             PROXY = Usuarios[Direc][0]
                             PORT_PX = int(Usuarios[Direc][1])
                             # Creamos el socket del Proxy
@@ -124,7 +123,6 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                             my_socket.connect((PROXY, PORT_PX))
                             my_socket.send(Recibido)
-                            print 'Enviado'
                             if Metodo == 'Invite' or Metodo == 'Bye':
                                 Recibido = my_socket.recv(1024)
                                 print Recibido
