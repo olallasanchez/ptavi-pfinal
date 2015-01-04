@@ -4,11 +4,25 @@
 import sys
 import os
 import socket
+import time
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 
 fichero = sys.argv[1]
 
+def log(Fichero, Evento, IP, Puerto, Texto):
+    Log = open(Fichero, 'a')
+    if Evento == 'Enviar':
+        Log.write(time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime()) + ' Send to ' + str(IP) + ':' + str(Puerto) + ': ' + Texto)
+    elif Evento == 'Recibir':
+        Log.write(time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime()) + ' Received from ' + str(IP) + ':' + str(Puerto) + ': ' + Texto)
+    elif Evento == 'Error':
+        Log.write(time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime()) + ' ' + Texto)
+    elif Evento == 'Finish':
+        Log.write(time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime()) + ' Finishing...\r\n')
+    elif Evento == 'Start':
+        Log.write(time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime()) + ' Starting...\r\n')
+    Log.close()
 
 class SmallSMILHandler(ContentHandler):
 
@@ -70,12 +84,10 @@ if __name__ == "__main__":
             fichero = sys.argv[1]
             parser.parse(open(fichero))
             Lista = cHandler.get_tags()
-            #no vaaaaaaaaaaaaaaaaaaaaaaaa
-            Ip_vacia = str(Lista[3]['ip'])
-            if not Ip_vacia:
-                Ip_vacia = '127.0.0.1'
+            if Lista[1]['ip'] == '':
+                Lista[1]['ip'] = '127.0.0.1'
             print Lista
-
+            log(Lista[4]['path'],'Start','','','')
             PROXY = Lista[3]['ip']
             PORT_PX = int(Lista[3]['puerto'])
             # Creamos el socket del Proxy
@@ -90,48 +102,65 @@ if __name__ == "__main__":
                 Line = 'Register sip:' + UserName + ':'
                 Line += Lista[1]['puerto'] + ' SIP/2.0\r\n' + 'Expires: '
                 Line += sys.argv[3] + '\r\n\r\n'
+                Log = 'Register sip:' + UserName + ':'
+                Log += Lista[1]['puerto'] + ' SIP/2.0\r\n'
+                log(Lista[4]['path'],'Enviar',PROXY,PORT_PX,Log)
             elif Metodo == 'Invite':
                 Line = 'Invite sip:' + sys.argv[3] + ' SIP/2.0\r\n'
                 Line += 'Content-Type: application/sdp\r\n\r\n'
                 Line += 'v = 0\r\no = ' + UserName + ' ' + Lista[1]['ip']
                 Line += '\r\ns = misesion\r\n' + 't = 0\r\n' + 'm = audio '
                 Line += Lista[2]['puerto'] + ' RTP\r\n\r\n'
+                Log = 'Invite sip:' + sys.argv[3] + ' SIP/2.0\r\n'
+                log(Lista[4]['path'],'Enviar',PROXY,PORT_PX,Log)
             elif Metodo == 'Bye':
                 Line = 'Bye sip:' + sys.argv[3] + ' SIP/2.0\r\n\r\n'
-
+                Log = 'Bye sip:' + sys.argv[3] + ' SIP/2.0\r\n'
+                log(Lista[4]['path'],'Enviar',PROXY,PORT_PX,Log)
             try:
                 # Contenido que vamos a enviar
                 my_proxy.send(Line)
                 print 'Envio'
-                data = my_proxy.recv(1024)
+                data0 = my_proxy.recv(1024)
                 print 'Enviamos...\r\n' + Line
-                print 'Recibimos ' + data
+                print 'Recibimos ' + data0
+                data = data0.split('\r\n')
+                if data[0] == 'SIP/2.0 200 OK' and Metodo == 'Bye':
+                    log(Lista[4]['path'],'Finish','','','')
+                else:
+                    log(Lista[4]['path'],'Recibir',PROXY,PORT_PX,data[0] + '\r\n')
             except socket.error:
                 Texto = 'Error: No server listening at '
-                Texto += PROXY + ' port ' + str(PORT_PX)
+                Texto += PROXY + ' port ' + str(PORT_PX) + '\r\n'
+                log(Lista[4]['path'],'Error','','',Texto)
                 print Texto
                 raise SystemExit
 
-            processed_data = data.split('\r\n')
+            processed_data = data0.split('\r\n')
             #Modifico la comprobación del mensaje del servidor y añado la escucha habilitando un buffer
             if processed_data[0] == "SIP/2.0 100 Trying" and\
             processed_data[2] == "SIP/2.0 180 Ringing" and\
             processed_data[4] == "SIP/2.0 200 OK":
+                log(Lista[4]['path'],'Recibir',PROXY,PORT_PX,"SIP/2.0 100 Trying\r\n")
+                log(Lista[4]['path'],'Recibir',PROXY,PORT_PX,"SIP/2.0 180 Ringing\r\n")
+                log(Lista[4]['path'],'Recibir',PROXY,PORT_PX,"SIP/2.0 200 OK\r\n")
                 LINE = 'Ack sip:' + sys.argv[3] + ' SIP/2.0\r\n\r\n'
                 print LINE
                 my_proxy.send(LINE)
+                Log = 'Ack sip:' + sys.argv[3] + ' SIP/2.0\r\n'
+                log(Lista[4]['path'],'Enviar',PROXY,PORT_PX,Log)
                 IP = processed_data[8].split(' ')
                 IP = IP[3]
                 Puerto = processed_data[11]. split(' ')
                 Puerto = str(Puerto[3])
                 print 'RTP.....'
                 #aEjecutar es un string con lo que se ejecuta en la shell
-                #Añado la IP del cliente en el envio de audio. Quito la 127.0.0.1
                 aEjecutar = './mp32rtp -i ' + IP + ' -p ' + Puerto + '< '
                 aEjecutar += Lista[5]['path']
                 print "Vamos a ejecutar", aEjecutar
                 os.system('chmod 755 mp32rtp')
                 os.system(aEjecutar)
+                log(Lista[4]['path'],'Enviar',Lista[1]['ip'],Lista[2]['puerto'],'Envio RTP\r\n')
                 print 'TERMINADO'
             my_proxy.close()
 
