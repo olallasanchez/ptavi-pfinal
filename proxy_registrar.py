@@ -11,7 +11,6 @@ from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 
 
-
 class SmallSMILHandler(ContentHandler):
 
     def __init__(self):
@@ -38,7 +37,6 @@ class SmallSMILHandler(ContentHandler):
                 dic[atributo] = attrs.get(atributo, "")
             self.Lista.append(dic)
 
-
     def get_tags(self):
         return self.Lista
 
@@ -55,11 +53,11 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
         cadena = 'User' + '\t' + 'IP' + '\t' + 'Puerto' + '\t' + 'Hora actual'
         cadena += '\t' + 'Expires\r\n'
         for x in Usuarios.keys():
-            cadena += x + '\t' + Usuarios[x][0] + '\t' + Usuarios[x][1] + '\t'
-            cadena += str(Usuarios[x][2]) + '\t' + str(Usuarios[x][3]) + '\r\n'
+            cadena += x + '\t' + Usuarios[x][0] + '\t' + Usuarios[x][1]
+            cadena += '\t' + str(Usuarios[x][2]) + '\t' + str(Usuarios[x][3])
+            cadena += '\r\n'
         fichero.write(cadena)
         fichero.close()
-
 
     def handle(self):
         """Escribe dirección y puerto del cliente (de tupla client_address)"""
@@ -83,20 +81,23 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
             Linea0 = Recibido.split('\r\n')
             Linea = Linea0[0].split(' ')
             Metodo = Linea[0]
-            uaclient.log(Lista[2]['path'],'Recibir',IP_Recib,Puerto_Recib,Linea0[0] + '\r\n')
+            uaclient.log(Lista[2]['path'], 'Recibir', IP_Recib, Puerto_Recib,
+                         Linea0[0] + '\r\n')
 
             if len(Linea) != 3 or Linea[2] != 'SIP/2.0':
-                Envio =  'SIP/2.0 400 Bad Request\r\n\r\n'
+                Envio = 'SIP/2.0 400 Bad Request\r\n\r\n'
                 self.wfile.write(Envio)
-                Log =  'SIP/2.0 400 Bad Request\r\n'
-                uaclient.log(Lista[2]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
+                Log = 'SIP/2.0 400 Bad Request\r\n'
+                uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
+                             Puerto_Recib, Log)
             else:
                 if not Metodo in Lista_Metodos:
                     if line != '':
                         Envio = 'SIP/2.0 405 Method Not Allowed\r\n\r\n'
                         self.wfile.write(Envio)
                         Log = 'SIP/2.0 405 Method Not Allowed\r\n'
-                        uaclient.log(Lista[2]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
+                        uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
+                                     Puerto_Recib, Log)
                 else:
                     if Metodo == 'Register':
                         Info = Linea[1].split(':')
@@ -113,18 +114,21 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                                 Line = 'SIP/2.0 404 User Not Found\r\n\r\n'
                                 self.wfile.write(Line)
                                 Log = 'SIP/2.0 404 User Not Found\r\n'
-                                uaclient.log(Lista[2]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
+                                uaclient.log(Lista[2]['path'], 'Enviar',
+                                             IP_Recib, Puerto_Recib, Log)
                         elif Expir > '0':
                             if not Direc in Usuarios:
                                 Hora = time.time()
-                                Usuarios[Direc] = (self.client_address[0],\
-         Puerto, time.time(), Expir)
+                                Usuarios[Direc] = (self.client_address[0],
+                                                   Puerto, time.time(), Expir)
                             Line = 'SIP/2.0 200 OK\r\n\r\n'
                             self.wfile.write(Line)
                             Log = 'SIP/2.0 200 OK\r\n'
-                            uaclient.log(Lista[2]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
+                            uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
+                                         Puerto_Recib, Log)
                         self.register2file()
-                    elif Metodo == 'Invite' or Metodo == 'Bye' or Metodo == 'Ack':
+                    if Metodo == 'Invite' or Metodo == 'Bye' or \
+                       Metodo == 'Ack':
                         Direc = Recibido.split(' ')
                         Direc = Direc[1].split(':')
                         Direc = Direc[1]
@@ -134,37 +138,53 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                                 UA = Usuarios[Direc][0]
                                 PORT_UA = int(Usuarios[Direc][1])
                                 # Creamos el socket del Proxy
-                                my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                                my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                                my_socket = socket.socket(socket.AF_INET,
+                                                          socket.SOCK_DGRAM)
+                                my_socket.setsockopt(socket.SOL_SOCKET,
+                                                     socket.SO_REUSEADDR, 1)
                                 my_socket.connect((UA, PORT_UA))
                                 my_socket.send(Recibido)
-                                uaclient.log(Lista[2]['path'],'Enviar',UA,PORT_UA,Linea0[0] + '\r\n')
+                                uaclient.log(Lista[2]['path'], 'Enviar', UA,
+                                             PORT_UA, Linea0[0] + '\r\n')
                                 if Metodo == 'Invite' or Metodo == 'Bye':
                                     Recibido = my_socket.recv(1024)
                                     Log = Recibido.split('\r\n')
                                     print len(Log)
-                                    uaclient.log(Lista[2]['path'],'Recibir',UA,PORT_UA,Log[0] + '\r\n')
+                                    uaclient.log(Lista[2]['path'], 'Recibir',
+                                                 UA, PORT_UA, Log[0] + '\r\n')
                                     if len(Log) == 14:
-                                        uaclient.log(Lista[2]['path'],'Recibir',UA,PORT_UA,Log[2] + '\r\n')
-                                        uaclient.log(Lista[2]['path'],'Recibir',UA,PORT_UA,Log[4] + '\r\n')
+                                        uaclient.log(Lista[2]['path'],
+                                                     'Recibir', UA, PORT_UA,
+                                                     Log[2] + '\r\n')
+                                        uaclient.log(Lista[2]['path'],
+                                                     'Recibir', UA, PORT_UA,
+                                                     Log[4] + '\r\n')
                                     print Recibido
                                     self.wfile.write(Recibido)
                                     Log = Recibido.split('\r\n')
-                                    uaclient.log(Lista[2]['path'],'Enviar',UA,PORT_UA,Log[0] + '\r\n')
+                                    uaclient.log(Lista[2]['path'], 'Enviar',
+                                                 UA, PORT_UA, Log[0] + '\r\n')
                                     if len(Log) == 14:
-                                        uaclient.log(Lista[2]['path'],'Enviar',UA,PORT_UA,Log[2] + '\r\n')
-                                        uaclient.log(Lista[2]['path'],'Enviar',UA,PORT_UA,Log[4] + '\r\n')
+                                        uaclient.log(Lista[2]['path'],
+                                                     'Enviar', UA, PORT_UA,
+                                                     Log[2] + '\r\n')
+                                        uaclient.log(Lista[2]['path'],
+                                                     'Enviar', UA, PORT_UA,
+                                                     Log[4] + '\r\n')
                                 my_socket.close()
                             except socket.error:
                                 Texto = 'Error: No server listening at '
-                                Texto += IP_Recib + ' port ' + str(Puerto_Recib) + '\r\n'
-                                uaclient.log(Lista[2]['path'],'Error','','',Texto)
+                                Texto += IP_Recib + ' port '
+                                Texto += str(Puerto_Recib) + '\r\n'
+                                uaclient.log(Lista[2]['path'], 'Error',
+                                             '', '', Texto)
                                 raise SystemExit
                         elif not Direc in Usuarios:
                             Line = 'SIP/2.0 404 User Not Found\r\n\r\n'
                             self.wfile.write(Line)
                             Log = 'SIP/2.0 404 User Not Found\r\n'
-                            uaclient.log(Lista[2]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
+                            uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
+                                         Puerto_Recib, Log)
 
 
 if __name__ == "__main__":
@@ -183,7 +203,8 @@ if __name__ == "__main__":
             Usuarios = {}
 
             print 'Server MiServidor listening at port ' + Lista[0]['puerto']
-            serv = SocketServer.UDPServer(("", int(Lista[0]['puerto'])), SIPRegisterHandler)
+            serv = SocketServer.UDPServer(("", int(Lista[0]['puerto'])),
+                                          SIPRegisterHandler)
             serv.serve_forever()
         else:
             print 'El fichero no existe'
