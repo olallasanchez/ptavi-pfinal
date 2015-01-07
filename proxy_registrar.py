@@ -77,7 +77,7 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
             IP_Recib = self.client_address[0]
             Puerto_Recib = self.client_address[1]
             Lista_Metodos = ["Register", "Invite", "Bye", "Ack"]
-            print 'Recibido ' + Recibido
+            print 'Recibimos...\r\n' + Recibido
             Linea0 = Recibido.split('\r\n')
             Linea = Linea0[0].split(' ')
             Metodo = Linea[0]
@@ -87,6 +87,7 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
             if len(Linea) != 3 or Linea[2] != 'SIP/2.0':
                 Envio = 'SIP/2.0 400 Bad Request\r\n\r\n'
                 self.wfile.write(Envio)
+                print 'Enviamos...\r\n' + Envio
                 Log = 'SIP/2.0 400 Bad Request\r\n'
                 uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
                              Puerto_Recib, Log)
@@ -95,6 +96,7 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                     if line != '':
                         Envio = 'SIP/2.0 405 Method Not Allowed\r\n\r\n'
                         self.wfile.write(Envio)
+                        print 'Enviamos...\r\n' + Envio
                         Log = 'SIP/2.0 405 Method Not Allowed\r\n'
                         uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
                                      Puerto_Recib, Log)
@@ -113,6 +115,7 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                             elif not Direc in Usuarios:
                                 Line = 'SIP/2.0 404 User Not Found\r\n\r\n'
                                 self.wfile.write(Line)
+                                print 'Enviamos...\r\n' + Line
                                 Log = 'SIP/2.0 404 User Not Found\r\n'
                                 uaclient.log(Lista[2]['path'], 'Enviar',
                                              IP_Recib, Puerto_Recib, Log)
@@ -123,6 +126,7 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                                                    Puerto, time.time(), Expir)
                             Line = 'SIP/2.0 200 OK\r\n\r\n'
                             self.wfile.write(Line)
+                            print 'Enviamos...\r\n' + Line
                             Log = 'SIP/2.0 200 OK\r\n'
                             uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
                                          Puerto_Recib, Log)
@@ -144,12 +148,13 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                                                      socket.SO_REUSEADDR, 1)
                                 my_socket.connect((UA, PORT_UA))
                                 my_socket.send(Recibido)
+                                print 'Reenvio...\r\n'
                                 uaclient.log(Lista[2]['path'], 'Enviar', UA,
                                              PORT_UA, Linea0[0] + '\r\n')
                                 if Metodo == 'Invite' or Metodo == 'Bye':
                                     Recibido = my_socket.recv(1024)
+                                    print 'Recibimos...\r\n' + Recibido
                                     Log = Recibido.split('\r\n')
-                                    print len(Log)
                                     uaclient.log(Lista[2]['path'], 'Recibir',
                                                  UA, PORT_UA, Log[0] + '\r\n')
                                     if len(Log) == 14:
@@ -159,8 +164,8 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                                         uaclient.log(Lista[2]['path'],
                                                      'Recibir', UA, PORT_UA,
                                                      Log[4] + '\r\n')
-                                    print Recibido
                                     self.wfile.write(Recibido)
+                                    print 'Reenvio...\r\n'
                                     Log = Recibido.split('\r\n')
                                     uaclient.log(Lista[2]['path'], 'Enviar',
                                                  UA, PORT_UA, Log[0] + '\r\n')
@@ -176,12 +181,14 @@ class SIPRegisterHandler(SocketServer.DatagramRequestHandler):
                                 Texto = 'Error: No server listening at '
                                 Texto += IP_Recib + ' port '
                                 Texto += str(Puerto_Recib) + '\r\n'
+                                print Texto
                                 uaclient.log(Lista[2]['path'], 'Error',
                                              '', '', Texto)
                                 raise SystemExit
                         elif not Direc in Usuarios:
                             Line = 'SIP/2.0 404 User Not Found\r\n\r\n'
                             self.wfile.write(Line)
+                            print 'Enviamos...\r\n' + Line
                             Log = 'SIP/2.0 404 User Not Found\r\n'
                             uaclient.log(Lista[2]['path'], 'Enviar', IP_Recib,
                                          Puerto_Recib, Log)
