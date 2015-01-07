@@ -94,7 +94,6 @@ if __name__ == "__main__":
             Lista = cHandler.get_tags()
             if Lista[1]['ip'] == '':
                 Lista[1]['ip'] = '127.0.0.1'
-            print Lista
             PROXY = Lista[3]['ip']
             PORT_PX = int(Lista[3]['puerto'])
             # Creamos el socket del Proxy
@@ -128,10 +127,9 @@ if __name__ == "__main__":
             try:
                 # Contenido que vamos a enviar
                 my_proxy.send(Line)
-                print 'Envio'
                 data0 = my_proxy.recv(1024)
                 print 'Enviamos...\r\n' + Line
-                print 'Recibimos ' + data0
+                print 'Recibimos...\r\n' + data0
                 data = data0.split('\r\n')
                 if data[0] == 'SIP/2.0 200 OK' and Metodo == 'Bye':
                     log(Lista[4]['path'], 'Finish', '', '', '')
@@ -152,13 +150,11 @@ if __name__ == "__main__":
                processed_data[2] == "SIP/2.0 180 Ringing" and \
                processed_data[4] == "SIP/2.0 200 OK":
                 log(Lista[4]['path'], 'Recibir', PROXY, PORT_PX,
-                    "SIP/2.0 100 Trying\r\n")
-                log(Lista[4]['path'], 'Recibir', PROXY, PORT_PX,
                     "SIP/2.0 180 Ringing\r\n")
                 log(Lista[4]['path'], 'Recibir', PROXY, PORT_PX,
                     "SIP/2.0 200 OK\r\n")
                 LINE = 'Ack sip:' + sys.argv[3] + ' SIP/2.0\r\n\r\n'
-                print LINE
+                print 'Enviamos...\r\n' + LINE
                 my_proxy.send(LINE)
                 Log = 'Ack sip:' + sys.argv[3] + ' SIP/2.0\r\n'
                 log(Lista[4]['path'], 'Enviar', PROXY, PORT_PX, Log)
@@ -166,7 +162,7 @@ if __name__ == "__main__":
                 IP = IP[3]
                 Puerto = processed_data[11].split(' ')
                 Puerto = str(Puerto[3])
-                print 'RTP.....'
+                print 'Envio RTP.....'
                 #aEjecutar es un string con lo que se ejecuta en la shell
                 aEjecutar = './mp32rtp -i ' + IP + ' -p ' + Puerto + '< '
                 aEjecutar += Lista[5]['path']
@@ -175,7 +171,7 @@ if __name__ == "__main__":
                 os.system(aEjecutar)
                 log(Lista[4]['path'], 'Enviar', Lista[1]['ip'],
                     Lista[2]['puerto'], 'Envio RTP\r\n')
-                print 'TERMINADO'
+                print 'Terminado RTP'
             my_proxy.close()
 
         else:
