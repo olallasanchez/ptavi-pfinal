@@ -71,7 +71,7 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
-            print line
+            print 'Recibimos...\r\n' + line
             IP_Recib = self.client_address[0]
             Puerto_Recib = self.client_address[1]
             Linea0 = line.split('\r\n')
@@ -85,6 +85,7 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                 if len(Linea) != 3 or Linea[2] != 'SIP/2.0':
                     Envio = 'SIP/2.0 400 Bad Request\r\n\r\n'
                     self.wfile.write(Envio)
+                    print 'Enviamos...\r\n' + Envio
                     Log = 'SIP/2.0 400 Bad Request\r\n'
                     uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
                                  Puerto_Recib, Log)
@@ -93,6 +94,7 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                         if line != '':
                             Envio = 'SIP/2.0 405 Method Not Allowed\r\n\r\n'
                             self.wfile.write(Envio)
+                            print 'Enviamos...\r\n' + Envio
                             Log = 'SIP/2.0 405 Method Not Allowed\r\n'
                             uaclient.log(Lista[4]['path'], 'Envio', IP_Recib,
                                          Puerto_Recib, Log)
@@ -100,7 +102,6 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                         if Metodo == 'Invite':
                             Info = line.split('\r\n\r\n')
                             SDP = Info[1].split('\r\n')
-                            print SDP
                             IP = SDP[1].split(' ')
                             self.RTP[0] = IP[3]
                             Puerto = SDP[4].split(' ')
@@ -113,7 +114,7 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                             Envio += Lista[1]['ip'] + '\r\ns = misesion\r\n'
                             Envio += 't = 0\r\n' + 'm = audio '
                             Envio += Lista[2]['puerto'] + ' RTP\r\n\r\n'
-                            print Envio
+                            print 'Enviamos...\r\n' + Envio
                             self.wfile.write(Envio)
                             uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
                                          Puerto_Recib,
@@ -124,9 +125,8 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                             uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
                                          Puerto_Recib,
                                          'SIP/2.0 200 OK\r\n')
-                            print 'Enviado'
                         elif Metodo == 'Ack':
-                            print 'RTP......'
+                            print 'Envio RTP.....'
                             #aEjecutar es un string con lo que se ejecuta
                                 #en la shell
                             aEjecutar = './mp32rtp -i ' + self.RTP[0] + ' -p '
@@ -138,10 +138,10 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                             uaclient.log(Lista[4]['path'], 'Enviar',
                                          self.RTP[0], self.RTP[1],
                                          'Envio RTP\r\n')
-                            print 'TERMINADO'
+                            print 'Terminado RTP'
                         elif Metodo == 'Bye':
                             Envio = 'SIP/2.0 200 OK\r\n\r\n'
-                            print Envio
+                            print 'Enviamos...\r\n' + Envio
                             self.wfile.write(Envio)
                             Log = 'SIP/2.0 200 OK\r\n'
                             uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
@@ -169,7 +169,6 @@ if __name__ == "__main__":
                 Lista[1]['ip'] = '127.0.0.1'
             serv = SocketServer.UDPServer(("", int(Lista[1]['puerto'])),
                                           EchoHandler)
-            uaclient.log(Lista[4]['path'], 'Start', '', '', '')
             print "Listening..."
             serv.serve_forever()
         else:
