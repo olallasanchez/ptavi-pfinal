@@ -54,7 +54,6 @@ class SmallSMILHandler(ContentHandler):
                 dic[atributo] = attrs.get(atributo, "")
             self.Lista.append(dic)
 
-
     def get_tags(self):
         return self.Lista
 
@@ -63,7 +62,7 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
     """
     Echo server class
     """
-    RTP = [0,'0']
+    RTP = [0, '0']
 
     def handle(self):
         while 1:
@@ -80,20 +79,23 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
             Metodo = Linea[0]
             Lista_Metodos = ["Invite", "Bye", "Ack"]
             UserName = Lista[0]['username']
-            uaclient.log(Lista[4]['path'],'Recibir',IP_Recib,Puerto_Recib,Linea0[0] + '\r\n')
+            uaclient.log(Lista[4]['path'], 'Recibir', IP_Recib, Puerto_Recib,
+                         Linea0[0] + '\r\n')
             try:
                 if len(Linea) != 3 or Linea[2] != 'SIP/2.0':
-                    Envio =  'SIP/2.0 400 Bad Request\r\n\r\n'
+                    Envio = 'SIP/2.0 400 Bad Request\r\n\r\n'
                     self.wfile.write(Envio)
-                    Log =  'SIP/2.0 400 Bad Request\r\n'
-                    uaclient.log(Lista[4]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
+                    Log = 'SIP/2.0 400 Bad Request\r\n'
+                    uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
+                                 Puerto_Recib, Log)
                 else:
                     if not Metodo in Lista_Metodos:
                         if line != '':
                             Envio = 'SIP/2.0 405 Method Not Allowed\r\n\r\n'
                             self.wfile.write(Envio)
                             Log = 'SIP/2.0 405 Method Not Allowed\r\n'
-                            uaclient.log(Lista[4]['path'],'Envio',IP_Recib,Puerto_Recib,Log)
+                            uaclient.log(Lista[4]['path'], 'Envio', IP_Recib,
+                                         Puerto_Recib, Log)
                     else:
                         if Metodo == 'Invite':
                             Info = line.split('\r\n\r\n')
@@ -107,36 +109,49 @@ class EchoHandler(SocketServer.DatagramRequestHandler):
                             Envio += 'SIP/2.0 180 Ringing\r\n\r\n'
                             Envio += 'SIP/2.0 200 OK\r\n'
                             Envio += 'Content-Type: application/sdp\r\n\r\n'
-                            Envio += 'v = 0\r\no = ' + UserName + ' ' + Lista[1]['ip']
-                            Envio += '\r\ns = misesion\r\n' + 't = 0\r\n' + 'm = audio '
+                            Envio += 'v = 0\r\no = ' + UserName + ' '
+                            Envio += Lista[1]['ip'] + '\r\ns = misesion\r\n'
+                            Envio += 't = 0\r\n' + 'm = audio '
                             Envio += Lista[2]['puerto'] + ' RTP\r\n\r\n'
                             print Envio
                             self.wfile.write(Envio)
-                            uaclient.log(Lista[4]['path'],'Enviar',IP_Recib,Puerto_Recib,'SIP/2.0 100 Trying\r\n')
-                            uaclient.log(Lista[4]['path'],'Enviar',IP_Recib,Puerto_Recib,'SIP/2.0 180 Ringing\r\n')
-                            uaclient.log(Lista[4]['path'],'Enviar',IP_Recib,Puerto_Recib,'SIP/2.0 200 OK\r\n')
+                            uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
+                                         Puerto_Recib,
+                                         'SIP/2.0 100 Trying\r\n')
+                            uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
+                                         Puerto_Recib,
+                                         'SIP/2.0 180 Ringing\r\n')
+                            uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
+                                         Puerto_Recib,
+                                         'SIP/2.0 200 OK\r\n')
                             print 'Enviado'
                         elif Metodo == 'Ack':
                             print 'RTP......'
-                            #aEjecutar es un string con lo que se ejecuta en la shell
-                            aEjecutar = './mp32rtp -i ' + self.RTP[0] + ' -p ' + str(self.RTP[1]) + '< '
+                            #aEjecutar es un string con lo que se ejecuta
+                                #en la shell
+                            aEjecutar = './mp32rtp -i ' + self.RTP[0] + ' -p '
+                            aEjecutar += str(self.RTP[1]) + '< '
                             aEjecutar += Lista[5]['path']
                             print "Vamos a ejecutar", aEjecutar
                             os.system('chmod 755 mp32rtp')
                             os.system(aEjecutar)
-                            uaclient.log(Lista[4]['path'],'Enviar',self.RTP[0],self.RTP[1],'Envio RTP\r\n')
+                            uaclient.log(Lista[4]['path'], 'Enviar',
+                                         self.RTP[0], self.RTP[1],
+                                         'Envio RTP\r\n')
                             print 'TERMINADO'
                         elif Metodo == 'Bye':
                             Envio = 'SIP/2.0 200 OK\r\n\r\n'
                             print Envio
                             self.wfile.write(Envio)
                             Log = 'SIP/2.0 200 OK\r\n'
-                            uaclient.log(Lista[4]['path'],'Enviar',IP_Recib,Puerto_Recib,Log)
-                            uaclient.log(Lista[4]['path'],'Finish','','','')
+                            uaclient.log(Lista[4]['path'], 'Enviar', IP_Recib,
+                                         Puerto_Recib, Log)
+                            uaclient.log(Lista[4]['path'], 'Finish', '', '',
+                                         '')
             except socket.error:
                 Texto = 'Error: No server listening at '
                 Texto += IP_Recib + ' port ' + str(Puerto_Recib) + '\r\n'
-                uaclient.log(Lista[4]['path'],'Error','','',Texto)
+                uaclient.log(Lista[4]['path'], 'Error', '', '', Texto)
                 print Texto
                 raise SystemExit
 
@@ -152,8 +167,9 @@ if __name__ == "__main__":
             Lista = cHandler.get_tags()
             if Lista[1]['ip'] == '':
                 Lista[1]['ip'] = '127.0.0.1'
-            serv = SocketServer.UDPServer(("", int(Lista[1]['puerto'])), EchoHandler)
-            uaclient.log(Lista[4]['path'],'Start','','','')
+            serv = SocketServer.UDPServer(("", int(Lista[1]['puerto'])),
+                                          EchoHandler)
+            uaclient.log(Lista[4]['path'], 'Start', '', '', '')
             print "Listening..."
             serv.serve_forever()
         else:
