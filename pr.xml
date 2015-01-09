@@ -1,0 +1,5 @@
+<config>
+	<server name = "Proxy" ip = "127.0.0.1" puerto = "9502"/>
+	<database path = "Escritorio/ptavi-pfinal/registered.txt" passwdpath = ""/>
+	<log path ="log_PROXY.txt"/>
+</config>
