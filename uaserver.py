@@ -167,7 +167,7 @@ if __name__ == "__main__":
             Lista = cHandler.get_tags()
             if Lista[1]['ip'] == '':
                 Lista[1]['ip'] = '127.0.0.1'
-            serv = SocketServer.UDPServer(("", int(Lista[1]['puerto'])),
+            serv = SocketServer.UDPServer((Lista[1]['ip'], int(Lista[1]['puerto'])),
                                           EchoHandler)
             print "Listening..."
             serv.serve_forever()
