@@ -210,7 +210,7 @@ if __name__ == "__main__":
             Usuarios = {}
 
             print 'Server MiServidor listening at port ' + Lista[0]['puerto']
-            serv = SocketServer.UDPServer(("", int(Lista[0]['puerto'])),
+            serv = SocketServer.UDPServer((Lista[0]['ip'], int(Lista[0]['puerto'])),
                                           SIPRegisterHandler)
             serv.serve_forever()
         else:
